@@ -1,0 +1,4 @@
+rootProject.name = 'dmedit'
+include 'parser'
+include 'editor'
+
