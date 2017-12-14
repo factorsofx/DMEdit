@@ -1,14 +1,22 @@
 package com.factorsofx.dmedit.parser;
 
 import com.factorsofx.dmedit.parser.byond.ObjectNode;
+import com.factorsofx.dmedit.parser.util.AbstractObservable;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class ObjectTree
+public class ObjectTree extends AbstractObservable<ObjectTree>
 {
-    // region Byond-Builtins
-    private ObjectNode datum = new ObjectNode(null, "datum");
+    // region Byond Builtins
+
+    // Catch-all for other stuff
+    private ObjectNode rootNode = new ObjectNode(null, "");
+
+    private ObjectNode datum = new ObjectNode(rootNode, "datum");
     {
         datum.setVar("tag", "null");
     }
@@ -127,10 +135,13 @@ public class ObjectTree
 
         String[] splitPath = trimmedPath.split("/");
         int startIndex = 0;
-        ObjectNode currentNode;
+
         if(splitPath[0].isEmpty()) startIndex++;
+
         if(splitPath.length > startIndex)
         {
+            ObjectNode currentNode;
+
             String startNodeName = splitPath[startIndex];
             switch(startNodeName)
             {
@@ -153,19 +164,25 @@ public class ObjectTree
                     currentNode = mob;
                     break;
                 default:
-                    throw new IllegalArgumentException("Unrecognized path start node " + startNodeName);
+                    currentNode = rootNode;
+                    break;
             }
+
+            startIndex++;
+
             for(int i = startIndex; i < splitPath.length; i++)
             {
-
+                // Iterates through the path, getting or creating children as it goes.
+                // Remember, ObjectNode::new automatically adds the new node to its parent
+                currentNode = currentNode.getChildren().getOrDefault(splitPath[i], new ObjectNode(currentNode, splitPath[i]));
             }
+
+            return currentNode;
         }
         else
         {
             return datum;
         }
-
-        return null;
     }
 
     public void addFileDir(Path path)

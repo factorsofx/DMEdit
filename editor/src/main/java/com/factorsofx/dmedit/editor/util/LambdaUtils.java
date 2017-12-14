@@ -1,4 +1,4 @@
-package com.factorsofx.dmedit.editor;
+package com.factorsofx.dmedit.editor.util;
 
 import java.util.function.Consumer;
 

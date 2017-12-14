@@ -2,15 +2,13 @@ package com.factorsofx.dmedit.parser.byond;
 
 import java.util.*;
 
-public class ObjectNode
+public class ObjectNode extends Observable
 {
     private ObjectNode parent;
     private String name;
 
     private Map<String, String> vars = new HashMap<>();
     private Map<String, ObjectNode> subtypes = new HashMap<>();
-
-    private List<ObjectNode> children = new ArrayList<>();
 
     /**
      * Creates a new object node with the given name and parent.
@@ -22,6 +20,11 @@ public class ObjectNode
     {
         this.parent = parent;
         this.name = name;
+
+        if(parent != null)
+        {
+            parent.subtypes.put(name, this);
+        }
     }
 
     public void setVar(String name, String value)
@@ -52,8 +55,8 @@ public class ObjectNode
         return name;
     }
 
-    public List<ObjectNode> getChildren()
+    public Map<String, ObjectNode> getChildren()
     {
-        return Collections.unmodifiableList(children);
+        return Collections.unmodifiableMap(subtypes);
     }
 }
