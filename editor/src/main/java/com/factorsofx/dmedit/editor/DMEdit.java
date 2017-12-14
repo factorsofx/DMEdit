@@ -20,6 +20,9 @@ public class DMEdit
                 .ifPresent(LambdaUtils.uncheckedConsumer(UIManager::setLookAndFeel));*/
 
         // Create editor frame
-        SwingUtilities.invokeLater(MainFrame::new);
+        SwingUtilities.invokeLater(() ->
+        {
+            new MainFrame(null);
+        });
     }
 }

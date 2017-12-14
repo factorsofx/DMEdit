@@ -19,6 +19,8 @@ public class DMEditor extends EditorPanel
 
     public DMEditor(File toOpen)
     {
+        super(toOpen, toOpen.getName());
+
         RSyntaxDocument doc = new RSyntaxDocument("text/dm");
         try
         {
