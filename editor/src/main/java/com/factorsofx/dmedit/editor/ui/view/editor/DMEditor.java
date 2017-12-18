@@ -1,12 +1,16 @@
 package com.factorsofx.dmedit.editor.ui.view.editor;
 
+import com.factorsofx.dmedit.editor.DMEdit;
+import com.google.common.base.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -17,24 +21,28 @@ public class DMEditor extends EditorPanel
 {
     private RSyntaxTextArea textArea;
 
-    public DMEditor(File toOpen)
+    public DMEditor(File toOpen) throws IOException
     {
         super(toOpen, toOpen.getName());
 
-        RSyntaxDocument doc = new RSyntaxDocument("text/dm");
-        try
-        {
-            doc.insertString(0, FileUtils.readFileToString(toOpen, StandardCharsets.ISO_8859_1), null);
+        textArea = new RSyntaxTextArea(FileUtils.readFileToString(toOpen, Charsets.ISO_8859_1));
+        textArea.setSyntaxEditingStyle("text/dm");
+        textArea.setCodeFoldingEnabled(true);
+
+        try {
+            Theme theme = Theme.load(RSyntaxTextArea.class.getResourceAsStream(
+                    "/darkTheme.xml"));
+            theme.apply(textArea);
+        } catch (IOException ioe) { // Never happens
+            ioe.printStackTrace();
         }
-        catch(BadLocationException ignored) {} // Can't be thrown
-        catch(IOException e)
-        {
-            throw new UncheckedIOException(e);
-        }
-        doc.getDocumentProperties().put("tabSize", 4);
-        RTextScrollPane textScrollPane = new RTextScrollPane();
-        textArea = new RSyntaxTextArea(doc);
-        textScrollPane.add(textArea);
+
+        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
+        scrollPane.setFoldIndicatorEnabled(true);
+
+        this.setLayout(new BorderLayout());
+        this.add(scrollPane, BorderLayout.CENTER);
+        this.invalidate();
     }
 
     @Override

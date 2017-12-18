@@ -1,6 +1,12 @@
 package com.factorsofx.dmedit.editor.ui.view;
 
-import com.factorsofx.dmedit.parser.ObjectTree;
+import com.factorsofx.dmedit.editor.ui.controller.ProjectController;
+import com.factorsofx.dmedit.editor.ui.view.tree.FileTreeDisplay;
+import com.factorsofx.dmedit.editor.ui.view.tree.ObjectNodeCellRenderer;
+import com.factorsofx.dmedit.editor.ui.view.tree.ObjectTreeTreeModel;
+import com.factorsofx.dmedit.parser.byond.ObjectNode;
+import com.factorsofx.dmedit.parser.util.Observable;
+import com.factorsofx.dmedit.parser.util.Observer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,12 +16,50 @@ import java.awt.*;
  */
 public class ObjectTreePanel extends JPanel
 {
-    private JButton refreshButton;
 
+    private JTree fileTree;
+    private JTree objectTree;
 
+    private static final String FILE_TREE_KEY = "File Tree";
+    private static final String OBJECT_TREE_KEY = "Object Tree";
 
-    public ObjectTreePanel(ObjectTree tree)
+    public ObjectTreePanel(ProjectController controller)
     {
-        this.setLayout(new BorderLayout());
+        this.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        JButton refreshButton = new JButton("⟲");
+        refreshButton.addActionListener((actionEvent) -> controller.refreshObjectTree());
+
+        fileTree = new FileTreeDisplay(controller.getDME().getParentFile(), controller);
+
+        objectTree = new JTree(new ObjectTreeTreeModel(controller.getObjectTree()));
+
+        objectTree.setCellRenderer(new ObjectNodeCellRenderer());
+
+        JPanel treePanel = new JPanel();
+        treePanel.setLayout(new CardLayout());
+        treePanel.add(new JScrollPane(fileTree), FILE_TREE_KEY);
+        treePanel.add(new JScrollPane(objectTree), OBJECT_TREE_KEY);
+
+        JComboBox<String> modeSelector = new JComboBox<>(new String[] {FILE_TREE_KEY, OBJECT_TREE_KEY});
+        modeSelector.addItemListener((itemEvent) -> ((CardLayout)treePanel.getLayout()).show(treePanel, (String)itemEvent.getItem()));
+
+        gbc.weightx = gbc.weighty = 0;
+        gbc.gridx = gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.gridwidth = gbc.gridheight = 1;
+        this.add(modeSelector, gbc);
+
+        gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 1;
+        this.add(refreshButton, gbc);
+
+        gbc.weightx = gbc.weighty = 1;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        this.add(treePanel, gbc);
     }
 }

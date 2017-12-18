@@ -1,10 +1,10 @@
 package com.factorsofx.dmedit.parser;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -21,37 +21,46 @@ public class ObjectTreeParser
 {
     private File dme;
 
+    private ObjectTree tree;
+
     /**
      * Group 1 is file to include
      */
-    private static final Pattern INCLUDE_PATTERN = Pattern.compile("\\s*?#include\\s+\"(.+)\"");
+    private static final Pattern INCLUDE_PATTERN = Pattern.compile("\\s*?#include\\s+\"(.+)\"\\s*");
 
     /**
      * Group 1 is the name of the macro
      * Group 2 is the value of the macro
      */
-    private static final Pattern DEFINE_PATTERN = Pattern.compile("\\s*#define\\s+([^\\s]+)\\s+(.+)");
+    private static final Pattern DEFINE_PATTERN = Pattern.compile("\\s*?as#define\\s+([^\\s]+)\\s+(.+)\\s*");
 
     /**
      * Group 1 is the macro to undefine
      */
-    private static final Pattern UNDEF_PATTERN = Pattern.compile("\\s*#undef\\s+([^\\s]+)");
+    private static final Pattern UNDEF_PATTERN = Pattern.compile("\\s*?#undef\\s+([^\\s]+)\\s*");
 
     /**
      * Group 1 is the name of the proc
      * Group 2 is the parameters
      */
-    private static final Pattern PROC_PATTERN = Pattern.compile("^(?:proc/)?([\\w/]+?)\\s*\\((.*)\\)");
+    private static final Pattern PROC_PATTERN = Pattern.compile("^\\s*?(?:proc/)?([\\w/]+?)\\s*\\((.*)\\)\\s*");
 
     /**
      * Group 1 is the type and flags and name of the var
      * Group 2 is what was assigned
      */
-    private static final Pattern VAR_PATTERN = Pattern.compile("^(?:var/)?([\\w/]+)\\s*=\\s*(.+)");
+    private static final Pattern VAR_PATTERN = Pattern.compile("^\\s*?(?:var/)?([\\w/]+)\\s*=\\s*(.+)");
+
+    public ObjectTreeParser(File dme, ObjectTree tree)
+    {
+        this(dme);
+        this.tree = tree;
+    }
 
     public ObjectTreeParser(File dme)
     {
         this.dme = dme;
+        this.tree = new ObjectTree();
     }
 
     public Future<ObjectTree> parse() throws IOException
@@ -59,7 +68,6 @@ public class ObjectTreeParser
         CompletableFuture<ObjectTree> future = new CompletableFuture<>();
         Thread t = new Thread(() ->
         {
-            ObjectTree tree = new ObjectTree();
             try
             {
                 // Begin by parsing stddef.dm, then parse the DME
@@ -74,6 +82,21 @@ public class ObjectTreeParser
         });
         t.start();
         return future;
+    }
+
+    public ObjectTree parseSynchronously()
+    {
+        try
+        {
+            // Begin by parsing stddef.dm, then parse the DME
+            //subParse(tree, new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/stddef.dm"))), null);
+            subParse(tree, new BufferedReader(new FileReader(dme)), dme.toPath());
+        }
+        catch(IOException e)
+        {
+            throw new UncheckedIOException(e);
+        }
+        return tree;
     }
 
     /**
@@ -95,9 +118,9 @@ public class ObjectTreeParser
         int indentDepth;                                        // For parsing tabs
         int lowestProcDepth = -1;                               // Lowest indent depth for the current proc, or -1 if no proc
         StringBuilder fullPathBuilder = new StringBuilder();    // Builds the full path of a line
-        List<CharSequence> splitLine;                                     // For storing the line split on '/'
+        List<CharSequence> splitLine;                           // For storing the line split on '/'
         List<String> subPath;                                   // The part of the path given in the current line
-        String restOfTheLine;                                   // The part of the line that doesn't define the path
+        CharSequence restOfTheLine;                             // The part of the line that doesn't define the path
 
         boolean inComment = false; // Flag for a multiline comment
 
@@ -257,9 +280,16 @@ public class ObjectTreeParser
             }
         }
 
+        lineCount = 0;
+
         // All lines validated and processed - parse tree now
         for(String line : lines)
         {
+            if(isBlank(line))
+            {
+                continue;
+            }
+
             if(beginsAfterSpaces(line, "#"))
             {
                 // Preprocessor directives first, these short-circuit all other line processing
@@ -274,7 +304,7 @@ public class ObjectTreeParser
                             File includedFile = new File(currentFile.getParent().toFile(), FilenameUtils.separatorsToSystem(includedPath));
                             if(includedFile.exists())
                             {
-                                System.out.println("Parsing included DM file " + includedFile.getPath());
+                                //System.out.println("Parsing included DM file " + includedFile.getPath());
                                 subParse(tree, new BufferedReader(new FileReader(includedFile)), includedFile.toPath());
                             }
                         }
@@ -292,6 +322,7 @@ public class ObjectTreeParser
                         String defineName = matcher.group(1);
                         if(defineName.equals("FILE_DIR"))
                         {
+                            tree.addFileDir(Paths.get(matcher.group(2)));
                             // TODO: FILE_DIR
                         }
                         else
@@ -323,12 +354,12 @@ public class ObjectTreeParser
 
             fullPathBuilder.setLength(0);
             indentDepth = getIndentDepth(line);
-            if(indentDepth < lowestProcDepth)
+            if(indentDepth <= lowestProcDepth)
             {
                 lowestProcDepth = -1;
             }
 
-            if(!(lowestProcDepth > 0 && indentDepth >= lowestProcDepth))
+            if(!(lowestProcDepth >= 0 && indentDepth >= lowestProcDepth))
             {
                 // Clears the path list down to the current level
                 for(int i = pathList.size() - 1; i >= indentDepth; i--)
@@ -341,15 +372,14 @@ public class ObjectTreeParser
 
                 splitLine = splitPath(line);
 
-                /*splitLine = line.trim().split("/");
-                int pathSectionIndex = 0;
-                for(String pathSection : splitLine)
+                for(CharSequence pathSequence : splitLine)
                 {
+                    String pathSection = pathSequence.toString();
                     if(pathSection.isEmpty() || pathSection.equals("const") || pathSection.equals("static") || pathSection.equals("global") || pathSection.equals("tmp"))
                     {
                         continue;
                     }
-                    if(pathSection.contains("proc") || pathSection.contains("verb") || (pathSection.contains("(") && pathSection.indexOf('(') < pathSection.lastIndexOf('/')))
+                    if(PROC_PATTERN.matcher(pathSection).matches())
                     {
                         if(lowestProcDepth < 0)
                         {
@@ -361,15 +391,13 @@ public class ObjectTreeParser
                     {
                         break;
                     }
-                    subPath.add(pathSection);
-                    pathSectionIndex++;
+                    subPath.add(pathSection.trim());
                 }
                 for(int i = pathList.size(); i <= indentDepth; i++)
                 {
                     pathList.add(Collections.emptyList());
                 }
                 pathList.set(indentDepth, subPath);
-
 
                 // The full path of the line, tabs and the current stuff
                 fullPathBuilder.append(pathList.stream().flatMap(Collection::stream).collect(Collectors.joining("/")));
@@ -379,16 +407,20 @@ public class ObjectTreeParser
                 Matcher matcher = VAR_PATTERN.matcher(restOfTheLine);
                 if(matcher.find())
                 {
-                    System.out.println("Var found in " + fullPathBuilder + ": " + matcher.group(1) + " = " + matcher.group(2));
-                    // String varName = matcher.group(1);
-                    // String value   = matcher.group(2);
+                    //System.out.println("Var found in " + fullPathBuilder + ": " + matcher.group(1) + " = " + matcher.group(2));
+                    String varName = matcher.group(1).trim();
+                    String varVal = matcher.group(2).trim();
+                    tree.getOrCreateObjectNode(fullPathBuilder.toString().trim()).setVar(varName, varVal);
                 }
-                */
             }
+
+            lineCount++;
         }
     }
 
     // A few utilities to make code more concise
+
+    private static StringBuilder splitPathBuffer = new StringBuilder();
 
     /**
      * Splits the given line into its path segments, and the remainder of the line as the last element.
@@ -398,27 +430,33 @@ public class ObjectTreeParser
      */
     private static List<CharSequence> splitPath(CharSequence path)
     {
-        StringBuilder builder = new StringBuilder();
+        splitPathBuffer.setLength(0);
         List<CharSequence> pathSections = new ArrayList<>();
 
         for(int i = 0; i < path.length(); i++)
         {
             if(Character.isLetterOrDigit(path.charAt(i)) || path.charAt(i) == '_')
             {
-                builder.append(path.charAt(i));
+                splitPathBuffer.append(path.charAt(i));
             }
             else
             {
-                if(builder.length() > 0)
+                if(path.charAt(i) == '/')
                 {
-                    pathSections.add(builder.toString());
-                    builder.setLength(0);
+                    pathSections.add(splitPathBuffer.toString());
+                    splitPathBuffer.setLength(0);
                 }
-                if(path.charAt(i) != '/')
+                else
                 {
-                    pathSections.add(path.subSequence(i, path.length()));
+                    splitPathBuffer.append(path.subSequence(i, path.length()));
+                    pathSections.add(splitPathBuffer.toString());
+                    return pathSections;
                 }
             }
+        }
+        if(splitPathBuffer.length() > 0)
+        {
+            pathSections.add(splitPathBuffer.toString());
         }
 
         return pathSections;
@@ -460,8 +498,7 @@ public class ObjectTreeParser
     {
         for(int i = 0; i < str.length(); i++)
         {
-            // Could also use Char::isSpaceChar maybe?
-            if(str.charAt(i) != ' ' || str.charAt(i) != '\t') return false;
+            if(!Character.isWhitespace(str.charAt(i))) return false;
         }
         return true;
     }
@@ -487,28 +524,6 @@ public class ObjectTreeParser
         for(int j = 0; j < beg.length(); j++)
         {
             if(str.charAt(i + j) != beg.charAt(j)) return false;
-        }
-        return true;
-    }
-
-    /**
-     * Same as {@link ObjectTreeParser#beginsAfterSpaces(CharSequence, CharSequence)} but it checks
-     * the end of the string, as opposed to the beginning
-     */
-    private static boolean endsBeforeSpaces(CharSequence str, CharSequence end)
-    {
-        int i;
-        for(i = str.length() - 1; i >= 0; i--)
-        {
-            if(str.charAt(i) != ' ' && str.charAt(i) != '\t')
-            {
-                break;
-            }
-        }
-        if(i - end.length() < 0) return false;
-        for(int j = 0; j < end.length(); j++)
-        {
-            if(str.charAt(i - j) != end.charAt(end.length() - j - 1)) return false;
         }
         return true;
     }

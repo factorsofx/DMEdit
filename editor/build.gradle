@@ -14,6 +14,7 @@ dependencies {
 
     compile 'com.fifesoft:rsyntaxtextarea:2.6.1'
     compile group: 'com.github.insubstantial', name: 'substance', version: '7.3'
+    compile group: 'com.google.guava', name: 'guava', version: '23.5-jre'
 
     compile project(":parser")
 }

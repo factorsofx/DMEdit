@@ -1,14 +1,20 @@
 package com.factorsofx.dmedit.parser.byond;
 
+import ca.odell.glazedlists.BasicEventList;
+import ca.odell.glazedlists.SortedList;
+
 import java.util.*;
 
-public class ObjectNode extends Observable
+/**
+ * Represents an object type in the BYOND path tree.
+ */
+public class ObjectNode implements Comparable<ObjectNode>
 {
     private ObjectNode parent;
     private String name;
 
     private Map<String, String> vars = new HashMap<>();
-    private Map<String, ObjectNode> subtypes = new HashMap<>();
+    private SortedList<ObjectNode> children = new SortedList<>(new BasicEventList<>());
 
     /**
      * Creates a new object node with the given name and parent.
@@ -23,7 +29,7 @@ public class ObjectNode extends Observable
 
         if(parent != null)
         {
-            parent.subtypes.put(name, this);
+            parent.children.add(this);
         }
     }
 
@@ -45,9 +51,20 @@ public class ObjectNode extends Observable
         }
     }
 
+    /**
+     * @return The parent of this {@code ObjectNode}
+     */
     public ObjectNode getParent()
     {
         return parent;
+    }
+
+    /**
+     * Returns {@code true} if {@code potentialParent} is anywhere in the parent hierarchy of this node.
+     */
+    public boolean isParent(ObjectNode potentialParent)
+    {
+        return parent != null && (parent.equals(potentialParent) || parent.isParent(potentialParent));
     }
 
     public String getName()
@@ -55,8 +72,19 @@ public class ObjectNode extends Observable
         return name;
     }
 
-    public Map<String, ObjectNode> getChildren()
+    public List<ObjectNode> getChildren()
     {
-        return Collections.unmodifiableMap(subtypes);
+        return Collections.unmodifiableList(children);
+    }
+
+    public Optional<ObjectNode> getChild(String name)
+    {
+        return children.stream().filter((node) -> node.name.equals(name)).findFirst();
+    }
+
+    @Override
+    public int compareTo(ObjectNode o)
+    {
+        return name.toLowerCase().compareTo(o.name.toLowerCase());
     }
 }

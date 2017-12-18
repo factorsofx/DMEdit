@@ -1,15 +1,11 @@
 package com.factorsofx.dmedit.parser;
 
 import com.factorsofx.dmedit.parser.byond.ObjectNode;
-import com.factorsofx.dmedit.parser.util.AbstractObservable;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ObjectTree extends AbstractObservable<ObjectTree>
+public class ObjectTree
 {
     // region Byond Builtins
 
@@ -116,6 +112,8 @@ public class ObjectTree extends AbstractObservable<ObjectTree>
     private Map<String, String> macros;
     private Map<String, ObjectNode> pathCache;
 
+    private List<ObjectTreeListener> listeners = new ArrayList<>();
+
     public ObjectTree()
     {
         fileDirs = new ArrayList<>();
@@ -164,7 +162,7 @@ public class ObjectTree extends AbstractObservable<ObjectTree>
                     currentNode = mob;
                     break;
                 default:
-                    currentNode = rootNode;
+                    currentNode = datum;
                     break;
             }
 
@@ -174,7 +172,16 @@ public class ObjectTree extends AbstractObservable<ObjectTree>
             {
                 // Iterates through the path, getting or creating children as it goes.
                 // Remember, ObjectNode::new automatically adds the new node to its parent
-                currentNode = currentNode.getChildren().getOrDefault(splitPath[i], new ObjectNode(currentNode, splitPath[i]));
+                Optional<ObjectNode> optNode = currentNode.getChild(splitPath[i]);
+                if(optNode.isPresent())
+                {
+                    currentNode = optNode.get();
+                }
+                else
+                {
+                    ObjectNode newNode = currentNode = new ObjectNode(currentNode, splitPath[i]);
+                    listeners.forEach((listener -> listener.onNodeAdded(newNode)));
+                }
             }
 
             return currentNode;
@@ -193,6 +200,11 @@ public class ObjectTree extends AbstractObservable<ObjectTree>
     public ObjectNode getRootNode()
     {
         return datum;
+    }
+
+    public void addListener(ObjectTreeListener listener)
+    {
+        listeners.add(listener);
     }
 
     void addMacro(String name, String val)
