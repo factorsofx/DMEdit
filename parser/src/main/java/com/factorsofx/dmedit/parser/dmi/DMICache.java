@@ -1,4 +1,4 @@
-package com.factorsofx.dmedit.editor.dmi;
+package com.factorsofx.dmedit.parser.dmi;
 
 import javax.swing.*;
 import java.util.Map;

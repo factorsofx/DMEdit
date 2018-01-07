@@ -1,5 +1,8 @@
 package com.factorsofx.dmedit.parser;
 
+import com.factorsofx.dmedit.parser.code.ObjectTree;
+import com.factorsofx.dmedit.parser.code.ObjectTreeParser;
+
 import java.io.File;
 
 public class ParserTest

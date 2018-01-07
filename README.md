@@ -3,14 +3,13 @@ Attempts to improve upon FastDMM by not having shitcode and actually
 being usable. Ultimate goal is to be better than DreamMaker itself.
 
 ## Capabilities (Current)
- - TODO: Finish anything
+ - Object Tree Parser
+ - Rudimentary syntax highlighting and code folding
  
 ## Capabilities (Planned)
 In no particular order...
- - Object Tree Parsing
  - Map Editing
- - Code Editing
- - Syntax highlighting, code folding, autocomplete, usable search
+ - Autocomplete, usable find/replace
  - DME integration (auto-includes)
  - DMI editing
  - Integration with BYOND

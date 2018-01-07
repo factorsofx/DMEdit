@@ -9,6 +9,7 @@ import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.skin.BusinessSkin;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -24,7 +25,7 @@ public class DMEdit
         atmf.putMapping("text/dm", "com.factorsofx.dmedit.editor.lexer.DMTokenMaker");
         FoldParserManager.get().addFoldParserMapping("text/dm", new DMFoldParser());
 
-        SubstanceLookAndFeel.setSkin(org.pushingpixels.substance.api.skin.GraphiteSkin.class.getName());
+        SubstanceLookAndFeel.setSkin(org.pushingpixels.substance.api.skin.BusinessSkin.class.getName());
 
         // Set LAF to Nimbus
         /*Arrays.stream(UIManager.getInstalledLookAndFeels())

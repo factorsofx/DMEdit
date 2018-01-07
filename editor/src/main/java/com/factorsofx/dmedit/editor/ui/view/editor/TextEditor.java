@@ -17,25 +17,25 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 
-public class DMEditor extends EditorPanel
+public class TextEditor extends EditorPanel
 {
     private RSyntaxTextArea textArea;
 
-    public DMEditor(File toOpen) throws IOException
+    public TextEditor(File toOpen, String syntaxStyle) throws IOException
     {
         super(toOpen, toOpen.getName());
 
         textArea = new RSyntaxTextArea(FileUtils.readFileToString(toOpen, Charsets.ISO_8859_1));
-        textArea.setSyntaxEditingStyle("text/dm");
+        textArea.setSyntaxEditingStyle(syntaxStyle);
         textArea.setCodeFoldingEnabled(true);
 
-        try {
+        /*try {
             Theme theme = Theme.load(RSyntaxTextArea.class.getResourceAsStream(
                     "/darkTheme.xml"));
             theme.apply(textArea);
         } catch (IOException ioe) { // Never happens
             ioe.printStackTrace();
-        }
+        }*/
 
         RTextScrollPane scrollPane = new RTextScrollPane(textArea);
         scrollPane.setFoldIndicatorEnabled(true);

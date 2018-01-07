@@ -1,6 +1,6 @@
 package com.factorsofx.dmedit.editor.ui.view.tree;
 
-import com.factorsofx.dmedit.parser.byond.ObjectNode;
+import com.factorsofx.dmedit.parser.code.ObjectNode;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 

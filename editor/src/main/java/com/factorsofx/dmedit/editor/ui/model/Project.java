@@ -1,7 +1,7 @@
 package com.factorsofx.dmedit.editor.ui.model;
 
-import com.factorsofx.dmedit.editor.dmi.DMICache;
-import com.factorsofx.dmedit.parser.ObjectTree;
+import com.factorsofx.dmedit.parser.dmi.DMICache;
+import com.factorsofx.dmedit.parser.code.ObjectTree;
 
 import java.io.File;
 import java.util.List;

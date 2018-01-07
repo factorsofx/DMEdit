@@ -1,4 +1,4 @@
-package com.factorsofx.dmedit.parser;
+package com.factorsofx.dmedit.parser.code;
 
 import org.apache.commons.io.FilenameUtils;
 

@@ -42,7 +42,7 @@ public class FileTreeDisplay extends JTree
         if(node.isDirectory())
         {
             List<File> files = Arrays.asList(Optional.ofNullable(node.listFiles((FileFilter) FileFilterUtils.or(
-                            new SuffixFileFilter(new String[]{"dm", "dmm", "dmi", "dme", "dms", "css", "html", "js"}),
+                            new SuffixFileFilter(new String[]{"dm", "dmm", "dmi", "dme", "dms", "css", "html", "js", "json"}),
                             DirectoryFileFilter.INSTANCE))).orElse(new File[]{}));
             files.sort(Ordering.from((f1, f2) ->
             {
@@ -53,7 +53,7 @@ public class FileTreeDisplay extends JTree
                 if(file1.isDirectory() && file2.isFile()) return -1;
                 if(file1.isFile() && file2.isDirectory()) return 1;
                 return 0;
-            }).compound(Comparator.comparing(File::getName)));
+            }).compound(Comparator.comparing((file) -> file.getName().toLowerCase())));
             for(File subNode : files)
             {
                 ret.add(scan(subNode));
@@ -66,13 +66,13 @@ public class FileTreeDisplay extends JTree
     {
         private T value;
 
-        public NamedMutableTreeNode(T value, String name)
+        NamedMutableTreeNode(T value, String name)
         {
             super(name);
             this.value = value;
         }
 
-        public T getValue()
+        T getValue()
         {
             return value;
         }

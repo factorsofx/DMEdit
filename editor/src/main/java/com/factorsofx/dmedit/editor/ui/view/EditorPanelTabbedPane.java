@@ -30,6 +30,11 @@ public class EditorPanelTabbedPane extends JPanel
         tabbedPane.setSelectedComponent(tab);
     }
 
+    public EditorPanel getSelectedPanel()
+    {
+        return (EditorPanel) tabbedPane.getSelectedComponent();
+    }
+
     private class TabCloseButton extends JButton
     {
         private Font defaultFont;

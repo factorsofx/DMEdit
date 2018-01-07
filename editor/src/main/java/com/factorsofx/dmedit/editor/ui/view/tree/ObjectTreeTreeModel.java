@@ -1,8 +1,8 @@
 package com.factorsofx.dmedit.editor.ui.view.tree;
 
-import com.factorsofx.dmedit.parser.ObjectTree;
-import com.factorsofx.dmedit.parser.ObjectTreeListener;
-import com.factorsofx.dmedit.parser.byond.ObjectNode;
+import com.factorsofx.dmedit.parser.code.ObjectTree;
+import com.factorsofx.dmedit.parser.code.ObjectTreeListener;
+import com.factorsofx.dmedit.parser.code.ObjectNode;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeModel;

@@ -3,10 +3,8 @@ package com.factorsofx.dmedit.editor.ui.view;
 import com.factorsofx.dmedit.editor.ui.controller.ProjectController;
 import com.factorsofx.dmedit.editor.ui.view.tree.FileTreeDisplay;
 import com.factorsofx.dmedit.editor.ui.view.tree.ObjectNodeCellRenderer;
+import com.factorsofx.dmedit.editor.ui.view.tree.ObjectTreeDisplay;
 import com.factorsofx.dmedit.editor.ui.view.tree.ObjectTreeTreeModel;
-import com.factorsofx.dmedit.parser.byond.ObjectNode;
-import com.factorsofx.dmedit.parser.util.Observable;
-import com.factorsofx.dmedit.parser.util.Observer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +16,7 @@ public class ObjectTreePanel extends JPanel
 {
 
     private JTree fileTree;
-    private JTree objectTree;
+    private JPanel objectTree;
 
     private static final String FILE_TREE_KEY = "File Tree";
     private static final String OBJECT_TREE_KEY = "Object Tree";
@@ -29,18 +27,16 @@ public class ObjectTreePanel extends JPanel
         GridBagConstraints gbc = new GridBagConstraints();
 
         JButton refreshButton = new JButton("⟲");
-        refreshButton.addActionListener((actionEvent) -> controller.refreshObjectTree());
+        // refreshButton.addActionListener((actionEvent) -> controller.refreshObjectTree());
 
         fileTree = new FileTreeDisplay(controller.getDME().getParentFile(), controller);
 
-        objectTree = new JTree(new ObjectTreeTreeModel(controller.getObjectTree()));
-
-        objectTree.setCellRenderer(new ObjectNodeCellRenderer());
+        objectTree = new ObjectTreeDisplay(controller.getObjectTree());
 
         JPanel treePanel = new JPanel();
         treePanel.setLayout(new CardLayout());
         treePanel.add(new JScrollPane(fileTree), FILE_TREE_KEY);
-        treePanel.add(new JScrollPane(objectTree), OBJECT_TREE_KEY);
+        treePanel.add(objectTree, OBJECT_TREE_KEY);
 
         JComboBox<String> modeSelector = new JComboBox<>(new String[] {FILE_TREE_KEY, OBJECT_TREE_KEY});
         modeSelector.addItemListener((itemEvent) -> ((CardLayout)treePanel.getLayout()).show(treePanel, (String)itemEvent.getItem()));

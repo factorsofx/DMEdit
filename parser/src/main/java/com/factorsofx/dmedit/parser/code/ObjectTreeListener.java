@@ -1,6 +1,4 @@
-package com.factorsofx.dmedit.parser;
-
-import com.factorsofx.dmedit.parser.byond.ObjectNode;
+package com.factorsofx.dmedit.parser.code;
 
 public interface ObjectTreeListener
 {
